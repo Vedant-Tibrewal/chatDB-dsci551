@@ -1,0 +1,5 @@
+# config file for whole project storing varibale to be used across the project
+project: project
+dataset: dataset
+train-param:
+  schema: [schema]
