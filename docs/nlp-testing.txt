@@ -1,6 +1,6 @@
 '''NLP tested - no satisfatory 0'''
 
-"Find the total patients where gender is 'male' grouped by  admissions hospital."
+"Find the total patients where gender is 'male' grouped by hospital admissions."
 problem - count 
 {'SELECT': 'patients.gender',
  'FROM': 'patients',
@@ -10,7 +10,7 @@ problem - count
  'ORDER BY': 'patients.gender',
  'LIMIT': -1}
 
-
+updated query = "Find the total patients where gender is 'male' grouped by hospital they are admissioned into."
 
  "Find the amount of patients where gender is 'male' grouped by  admissions hospital."
 
@@ -122,7 +122,7 @@ problem where
 
 
 
- "Get the count patients where gender is 'female' grouped by acareleve admission"
+ "Get the count patients where gender is 'female' grouped by carelevel admission"
 
  {'SELECT': 'admissions.carelevel, COUNT(admissions.patientid), patients.gender',
  'FROM': 'admissions\nJOIN patients ON admissions.patientid=patients.patientid \n',
