@@ -1,0 +1,165 @@
+'''NLP tested - no satisfatory 0'''
+
+"Find the total patients where gender is 'male' grouped by  admissions hospital."
+problem - count 
+{'SELECT': 'patients.gender',
+ 'FROM': 'patients',
+ 'WHERE': [{'column': 'gender', 'operator': '=', 'value': 'male'}],
+ 'HAVING': [],
+ 'GROUP BY': 'admissionid',
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1}
+
+
+
+ "Find the amount of patients where gender is 'male' grouped by  admissions hospital."
+
+problem  - count 
+{'SELECT': 'patients.gender',
+ 'FROM': 'patients',
+ 'WHERE': [{'column': 'gender', 'operator': '=', 'value': 'male'}],
+ 'HAVING': [],
+ 'GROUP BY': 'admissionid',
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1}
+
+
+"Get the count patients where gender is 'female' grouped by carelevel."
+problem - group by is not showing up in select 
+{'SELECT': 'COUNT(admissions.patientid), patients.gender',
+ 'FROM': 'patients',
+ 'WHERE': [],
+ 'HAVING': [{'column': 'gender', 'operator': '=', 'value': 'female'}],
+ 'GROUP BY': 'carelevel',
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1}
+
+
+"Find total patients where bloodtype is 'A+'."
+problem - count
+
+{'SELECT': 'patients.bloodtype',
+ 'FROM': 'patients',
+ 'WHERE': [{'column': 'bloodtype', 'operator': '=', 'value': 'A+'}],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'patients.bloodtype',
+ 'LIMIT': -1}
+
+
+
+
+ "Show all doctors where the hospital is 'City General'."
+ problem - where 
+
+ {'SELECT': 'admissions.hospital, admissions.doctor',
+ 'FROM': 'admissions',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'admissions.hospital',
+ 'LIMIT': -1}
+ 
+ 
+ " Show all doctors where the hospital equal to 'City General'."
+ problem - where 
+{'SELECT': 'admissions.hospital, admissions.doctor',
+ 'FROM': 'admissions',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'admissions.hospital',
+ 'LIMIT': -1}
+
+
+
+" Show all patients where gender equal to 'female'"
+ptoblem where
+{'SELECT': 'patients.gender',
+ 'FROM': 'patients',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1}
+
+ "Show all patients where gender is'female'"
+problem where 
+{'SELECT': 'patients.gender',
+ 'FROM': 'patients',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1
+ 
+
+
+
+'''
+-----------------------------------
+ NLP  tested - yes  satisfatory 1 
+-------------------------------------'''
+"Get the minimum billing cost grouped by insurance provider."
+
+{'SELECT': 'insurance.billingcost, MIN(insurance.billingcost), insurance.insuranceprovider, admissions.insuranceid',
+ 'FROM': 'admissions\nJOIN insurance ON admissions.insuranceid=insurance.insuranceid \n',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': 'admissions.insuranceid',
+ 'ORDER BY': 'insurance.insuranceprovider',
+ 'LIMIT': -1}
+
+ "Get the maximum billing cost grouped by insurance provider."
+
+ {'SELECT': 'insurance.billingcost, admissions.insuranceid, insurance.insuranceprovider, MAX(insurance.billingcost)',
+ 'FROM': 'admissions\nJOIN insurance ON admissions.insuranceid=insurance.insuranceid \n',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': 'admissions.insuranceid',
+ 'ORDER BY': 'insurance.insuranceprovider DESC',
+ 'LIMIT': -1}
+
+
+
+ "Get the count patients where gender is 'female' grouped by acareleve admission"
+
+ {'SELECT': 'admissions.carelevel, COUNT(admissions.patientid), patients.gender',
+ 'FROM': 'admissions\nJOIN patients ON admissions.patientid=patients.patientid \n',
+ 'WHERE': [],
+ 'HAVING': [{'column': 'gender', 'operator': '=', 'value': 'female'}],
+ 'GROUP BY': 'admissions.carelevel',
+ 'ORDER BY': 'admissions.carelevel',
+ 'LIMIT': -1}
+ 
+ 
+ "Find count patients where bloodtype is 'A+'."
+ 
+ {'SELECT': 'COUNT(admissions.patientid), patients.bloodtype',
+ 'FROM': 'patients',
+ 'WHERE': [],
+ 'HAVING': [{'column': 'bloodtype', 'operator': '=', 'value': 'A+'}],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'patients.bloodtype',
+ 'LIMIT': -1}
+
+
+  "Show the admission carelevel and insurance provider of patients"
+
+  {'SELECT': 'admissions.carelevel, insurance.insuranceprovider',
+ 'FROM': 'admissions\nJOIN insurance ON admissions.insuranceid=insurance.insuranceid \n',
+ 'WHERE': [],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'insurance.insuranceprovider',
+ 'LIMIT': -1}
+  
+  
+   "Show the admission carelevel and insurance provider of patients that gender is 'male'"
+  {'SELECT': 'admissions.carelevel, insurance.insuranceprovider, patients.gender',
+ 'FROM': 'admissions\nJOIN patients ON admissions.patientid=patients.patientid \nJOIN insurance ON admissions.insuranceid=insurance.insuranceid \nJOIN patients ON insurance.patientid=patients.patientid \n',
+ 'WHERE': [{'column': 'gender', 'operator': '=', 'value': 'male'}],
+ 'HAVING': [],
+ 'GROUP BY': -1,
+ 'ORDER BY': 'patients.gender',
+ 'LIMIT': -1}
