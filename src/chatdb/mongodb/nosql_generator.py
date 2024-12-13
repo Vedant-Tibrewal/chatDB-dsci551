@@ -42,6 +42,8 @@ class NoSQLGenerator(QueryGenerator):
             left_key = left_key.strip()
             right_key = right_key.strip()
 
+            print(join_table, left_key)
+
             lookup = {
                 "$lookup": {
                     "from": join_table,
@@ -102,14 +104,22 @@ class NoSQLGenerator(QueryGenerator):
                     func, field = column.split('(')
                     field = field.rstrip(')').split('.')[-1]
                     func = func.strip().upper()
+                    print(func)
                     if func in ['SUM', 'AVG', 'MAX', 'MIN']:
                         project[field] = {f"${func.lower()}": f"${field}"}
                     elif func == "COUNT":
+                        print("count inside mongo")
                         group[field] = {f"${func.lower()}": {}}
+                        print(group)
                 else:
                     field = column.split('.')[-1]
-                    project[field] = 1
+                    table = column.split('.')[0]
+                    if table != main_table:
+                        project[column] = 1
+                    else:
+                        project[field] = 1
 
+        print("project_update", project)
         # Process ORDER BY
         order_by = sql_dict.get('ORDER BY', '')
         if order_by and order_by != -1:
@@ -155,12 +165,15 @@ class NoSQLGenerator(QueryGenerator):
 
         query = f"{collection}."
         group_flag = False
+        lookup_flag = False
         for clause in pipeline:
             if "$group" in clause:
                 group_flag = True
+            if "$lookup" in clause:
+                lookup_flag = True
 
         print("pipeline", pipeline)
-        if group_flag:
+        if group_flag or lookup_flag:
             print("in group")
             group_pipeline = []
 
