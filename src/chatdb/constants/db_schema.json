@@ -1,0 +1,58 @@
+{
+    "patients": {
+        "patientid": "INT",
+        "patientname": "VARCHAR(255)",
+        "age": "INT",
+        "gender": "VARCHAR(255)",
+        "bloodtype": "VARCHAR(255)",
+        "disease": "VARCHAR(255)",
+        "pk": [
+            "patientid"
+        ],
+        "fk": {}
+    },
+    "insurance": {
+        "insuranceid": "INT",
+        "patientid": "INT",
+        "insuranceprovider": "VARCHAR(255)",
+        "billingcost": "FLOAT",
+        "benefit": "VARCHAR(255)",
+        "pk": [
+            "insuranceid"
+        ],
+        "fk": {
+            "patients": "patientid"
+        }
+    },
+    "hospitals": {
+        "admissionid": "INT",
+        "patientid": "INT",
+        "insuranceid": "INT",
+        "doctor": "VARCHAR(255)",
+        "hospitalname": "VARCHAR(255)",
+        "intakedate": "VARCHAR(255)",
+        "dischargedate": "VARCHAR(255)",
+        "roomnumber": "INT",
+        "carelevel": "VARCHAR(255)",
+        "testresults": "VARCHAR(255)",
+        "pk": [
+            "admissionid"
+        ],
+        "fk": {
+            "insurance": "insuranceid",
+            "patients": "patientid"
+        }
+    },
+    "prescriptions": {
+        "prescriptionid": "VARCHAR(255)",
+        "patientid": "INT",
+        "medication": "VARCHAR(255)",
+        "drug_quantity": "VARCHAR(255)",
+        "pk": [
+            "prescriptionid"
+        ],
+        "fk": {
+            "patients": "patientid"
+        }
+    }
+}

@@ -1,5 +1,4 @@
 # setup file to make repository into python package
-import distutils.core
 import os
 from distutils.core import setup
 
@@ -25,8 +24,8 @@ setup(
     name="chatdb",
     version=get_version_info()["version"],
     package_dir={"": "src"},
-    description="Project - one line description",
-    author="Vedant Tibrewal",
+    description="Project - interactive chatbot with database querying capabilities",
+    author="Vedant Tibrewal & Gleice Chaves",
     packages=PEP420PackageFinder.find(where=str(SRC)),
     entry_points={"console_scripts": ["project=production.entrypoint"]},
 )

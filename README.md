@@ -452,23 +452,36 @@ SQL = {
 # col names in key, dataype as value
 mongodb_database = {
     "users": {
-        "ObjectId": ["_id"],
-        "String": ["username", "email"],
-        "Number": ["age"],
-        "Date": ["birth_date", "created_at"],
-        "Boolean": ["is_active"]
+        "pk": ["_id"],
+        "fk": {},
+        "_id": "ObjectId",
+        "username": "String",
+        "email": "String",
+        "age": "Number",
+        "birth_date": "Date",
+        "created_at": "Date",
+        "is_active": "Boolean"
     },
     "orders": {
-        "ObjectId": ["_id", "user_id"],
-        "Number": ["quantity", "total_amount"],
-        "Date": ["order_date"],
-        "String": ["status"],
-        "Array": ["items"]
+        "pk": ["_id"],
+        "fk": {"users": "user_id"},
+        "_id": "ObjectId",
+        "user_id": "ObjectId",
+        "quantity": "Number",
+        "total_amount": "Number",
+        "order_date": "Date",
+        "status": "String",
+        "items": "Array"
     },
     "products": {
-        "ObjectId": ["_id"],
-        "String": ["name", "description"],
-        "Number": ["price", "stock"],
-        "Array": ["categories", "tags"]
+        "pk": ["_id"],
+        "fk": {},
+        "_id": "ObjectId",
+        "name": "String",
+        "description": "String",
+        "price": "Number",
+        "stock": "Number",
+        "categories": "Array",
+        "tags": "Array"
     }
 }
