@@ -1,6 +1,6 @@
 {
   "user": "root",
-  "password": "Ptjthtvtag123@@",
+  "password": "password",
   "host": "127.0.0.1",
   "database": "chatdb",
   "raise_on_warnings": true
