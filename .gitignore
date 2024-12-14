@@ -163,6 +163,3 @@ cython_debug/
 
 
 *.code-workspace
-
-# dataset/*.json
-dataset/*
