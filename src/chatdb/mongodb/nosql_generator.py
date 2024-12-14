@@ -42,8 +42,6 @@ class NoSQLGenerator(QueryGenerator):
             left_key = left_key.strip()
             right_key = right_key.strip()
 
-            print(join_table, left_key)
-
             lookup = {
                 "$lookup": {
                     "from": join_table,
@@ -81,7 +79,6 @@ class NoSQLGenerator(QueryGenerator):
             for col in group_by.split(', '):
                 if col.strip():
                     field = col.strip().split('.')[-1]
-                    print("group", field)
                     group["_id"][field] = f"${field}"
 
             for column in select_clause:
@@ -104,13 +101,10 @@ class NoSQLGenerator(QueryGenerator):
                     func, field = column.split('(')
                     field = field.rstrip(')').split('.')[-1]
                     func = func.strip().upper()
-                    print(func)
                     if func in ['SUM', 'AVG', 'MAX', 'MIN']:
                         project[field] = {f"${func.lower()}": f"${field}"}
                     elif func == "COUNT":
-                        print("count inside mongo")
                         group[field] = {f"${func.lower()}": {}}
-                        print(group)
                 else:
                     field = column.split('.')[-1]
                     table = column.split('.')[0]
@@ -119,7 +113,6 @@ class NoSQLGenerator(QueryGenerator):
                     else:
                         project[field] = 1
 
-        print("project_update", project)
         # Process ORDER BY
         order_by = sql_dict.get('ORDER BY', '')
         if order_by and order_by != -1:
@@ -172,9 +165,7 @@ class NoSQLGenerator(QueryGenerator):
             if "$lookup" in clause:
                 lookup_flag = True
 
-        print("pipeline", pipeline)
         if group_flag or lookup_flag:
-            print("in group")
             group_pipeline = []
 
             for stage in pipeline:
@@ -183,7 +174,6 @@ class NoSQLGenerator(QueryGenerator):
                     group_pipeline.append(stage)
 
 
-            print("new_pipeline",group_pipeline)
             result = local_collection.aggregate(group_pipeline)
             query += f"aggregate({pipeline})"
         else:
@@ -197,14 +187,12 @@ class NoSQLGenerator(QueryGenerator):
                 if "$match" in clause:
                     match_clause = clause["$match"]
                 if "$project" in clause:
-                    print(clause["$project"])
                     project_clause = clause["$project"]
                 if "$sort" in clause:
                     sort_clause = clause["$sort"]
                 if "$limit" in clause:
                     limit_clause = clause["$limit"]
 
-            print("here", match_clause, project_clause)
             if sort_clause and limit_clause:
                 result = local_collection.find(match_clause, project_clause).sort(sort_clause).limit(limit_clause)
                 query += f"find({match_clause}, {project_clause}).sort({sort_clause}).limit({limit_clause})"

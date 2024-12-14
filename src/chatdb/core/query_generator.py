@@ -57,8 +57,6 @@ class QueryGenerator:
 
         while i < len(tokens) - 1:  # Changed to len(tokens) - 1
             if tokens[i].lower() not in self.constants['ALL_KEYWORDS'] and (tokens[i + 1].lower() == merge_key or tokens[i + 1].lower() == f"{merge_key}s"):
-                # print("condition trig")
-                # print(f"{tokens[i]}_{tokens[i+1]}")
                 result.append(f"{tokens[i]}_{tokens[i+1]}")
                 i += 2
             else:
@@ -67,17 +65,10 @@ class QueryGenerator:
         if i < len(tokens):  # Add any remaining token
             result.append(tokens[i])
 
-        # print("merged", result)
-
         return result
 
     def preprocess_text(self, text):
-        # Lowercase
-        # text = text.lower() # change it to lower while comparisson
-        
-        # Remove punctuation
-        # pattern = r'[^\w\s()*\d-]|(?<!\d)-(?!\d)'
-        # text = re.sub(pattern, '', text)
+
         text = re.sub(r'\?', '', text)
         text = re.sub(r'\$', '', text)
         text = re.sub(r'\.$', '', text)
@@ -92,21 +83,15 @@ class QueryGenerator:
 
         result = self.merge_before_token(result, merge_key="date") # intake date => intake_date
 
-        # print(1, result)
-
         i = 0
         result2 = []
-        # group_by_keys = self.constants['sql_clauses']['GROUP BY']
-        # group_by_keys = [key.split('by')[0].strip() for key in group_by_keys if key.split('by')[0] != '']
-        # print("group keys", group_by_keys)
 
         # differentiate between order by and group by
         order_by_keys = self.constants['sql_clauses']['ORDER BY']
         order_by_keys = [key.split('by')[0].strip() for key in order_by_keys if key.split('by')[0] != '']
-        # print("order keys", order_by_keys)
 
         while i < len(result) - 1:
-            if result[i+1].lower() =='by' and result[i].lower() in order_by_keys: #(result[i].lower() in group_by_keys):
+            if result[i+1].lower() =='by' and result[i].lower() in order_by_keys:
                 result2.append(f"{result[i]} {result[i+1]}")
                 i += 2
             else:
@@ -115,35 +100,29 @@ class QueryGenerator:
         if i < len(result):  # Add any remaining token
             result2.append(result[i])
 
-        # print(result)
         text = ' '.join(result2)
 
         # substitute words
         text = self.replace_string(text, self.constants['sql_clauses'])
         text = self.replace_string(text, self.constants['aggregate_functions'])
-        # from \d+ -> >=
         text = self.replace_string(text, self.constants['comparison_operators'])
         between_pattern = r'from \b(\w+|\d+)\b to \b(\w+|\d+)\b | \b(\w+|\d+)\b to \b(\w+|\d+)\b'
         text = re.sub(between_pattern, r" between(\1, \2)", text)
         text = self.replace_string(text, self.constants['logical_operators'])
 
         # Tokenization
-        # tokens = word_tokenize(text)
         tokens = text.split()
 
         tokens = [str(self.replace_numbers(token)) for token in tokens]
-        # print(3, tokens)
 
         # Remove stopwords
-        #  load custom stop words
         tokens = [token for token in tokens if token.lower() not in self.constants['stop_words']]
 
-        # print(4, tokens)
 
-        # Lemmatization (optional) // important for similarity
+        # Lemmatization // important for similarity
         tokens = [lemmatizer.lemmatize(token) for token in tokens]
         
-        return tokens# ' '.join(tokens)
+        return tokens
     
     def remove_keywords(self, tokens):
         token_without_key = [token for token in tokens if token not in self.constants['ALL_KEYWORDS']]
@@ -153,16 +132,13 @@ class QueryGenerator:
     def identify_group_by(self, tokens):
         result = []
         i = 0
-        while i < len(tokens) - 2:  # Changed to len(tokens) - 1
+        while i < len(tokens) - 2:
 
             if tokens[i].lower() == "group" and tokens[i+1].lower() == "by":
-                # print(f"{tokens[i]}_{tokens[i+1]}")
+
                 for table, columns in self.db_schema.items():
-                    # for column in self.db_schema[table].keys():
-                    # for column in columns.keys():
                     match = get_close_matches(tokens[i+2], columns)
                     if match:
-                        print(tokens[i+2], ":", match)     
                         self.query_template["GROUP BY"] = f"{match[0]}"                   
                         result.append(f"{tokens[i]} {tokens[i+1]} {match[0]}")
                         break
@@ -173,8 +149,6 @@ class QueryGenerator:
         if i < len(tokens):  # Add any remaining token
             result.extend(tokens[i:])
 
-        # self.query_template["GROUP BY"] = -1
-        # print("grou: ", result)
         return result
     
         # group by before this
@@ -192,14 +166,10 @@ class QueryGenerator:
             for table in self.db_schema.keys():
                 similarity = fuzz.ratio(token, table.lower())
                 if token in detected_table[2]:
-                    # print(f"Table identified: {token} {table} {similarity}")
-                    # print(detected_table)
                     i = detected_table[2].index(token)
                     if similarity >= detected_table[1][i]:
-                        # detected_table[0] = table
                         detected_table[1][i] = similarity
                         detected_table[0][i] = table
-                    # print(f"Table identified: {table} {similarity}")
                 else:
                     if similarity >= 70: # initial threshold
                         detected_table[0].append(table)
@@ -210,8 +180,6 @@ class QueryGenerator:
         for i in range(len(detected_table[0])):
             if detected_table[1][i] > 85:
                 tokens.remove(detected_table[2][i])    
-            
-        # print("dsfsdgd",detected_table[0])
 
         return detected_table[0]
 
@@ -219,11 +187,8 @@ class QueryGenerator:
     def indentify_col_tables(self, tokens, identified_table=None):
         res = dict()
 
-        print("checking tables implementation: ",identified_table)
-
         if not identified_table:
             identified_table = self.indentify_table(tokens)
-            print("table",identified_table)
             if not tokens:
                 res[identified_table[0]] = ['*']
                 return res
@@ -242,45 +207,26 @@ class QueryGenerator:
                             similarity = fuzz.ratio(token, column.lower())
                             if similarity >= 55:
                                 if res[table].get(token):
-                                    # print("case 1")
-                                    # print(token, ":", column, similarity)
                                     old_similarity = list(res[table][token].values())[0]
-                                    # print("sim", old_similarity)
                                     if similarity > old_similarity:
                                         res[table][token] = {column: similarity}
                                 else:
-                                    # print("case 2")
-                                    # print(token, ":", column, similarity)
                                     res[table][token] = {column: similarity}
-                                # print(res)
-                                # if res.get(identified_table):
-                                #     res[identified_table].append(column)
-                                # else:
-                                #     res[identified_table] = [column]
+
+
         else:
             for token in tokens:
                 for table, columns in self.db_schema.items():
-                    # for column in self.db_schema[table].keys():
-                    # # for column in columns.keys():
-                    #     if column=='pk' or column=='fk':
-                    #         continue
-                    #     else:
                     
                     cols = list(map(str.lower, list(columns.keys())))
                             
                     match = get_close_matches(token, cols)
-                    # print("abracadabra: ", token, columns)
                     if match:
-                        # print("match found:",match)
-                        # print("*"*4, token, ":", match[0])
-                        # if token in columns: # replace by fuzzy logic
-                        # print(f"Column identified: {column} in table {table}")
                         if res.get(table):
                             res[table].add(match[0])
                         else:
                             res[table] = set(match)
 
-        # patients = {"patients_id"}, hopitals= {"room_number", "patients_id"}
         if identified_table:
             result = {}
             for table, token in res.items():
@@ -314,10 +260,6 @@ class QueryGenerator:
         # Get nodes and edges for verification
         nodes = list(G.nodes)
         edges = list(G.edges)
-
-        # Output nodes and edges
-        # print(nodes)
-        # print(edges)
 
         return G
     
@@ -404,8 +346,6 @@ class QueryGenerator:
             # If the result is an empty set, we want to keep the original edge[0] value
             if not filtered_result[edge[0]]:
                 filtered_result[edge[0]] = self.req_schema[edge[0]]
-
-        print("updated schema:",filtered_result)
         
         return filtered_result
 
@@ -416,11 +356,7 @@ class QueryGenerator:
         db_graph = self.create_graph()
         db_dir_graph = self.create_graph(directional=True)
 
-        # print(db_dir_graph)
-
         required_tables = list(self.req_schema.keys())
-
-        print(required_tables)
 
         min_dist = float('inf')
         for st_table in required_tables:
@@ -430,9 +366,6 @@ class QueryGenerator:
                     join_graph = OrderedSet(sub_graph)
                     min_dist = distance
 
-        print(join_graph)
-
-
         req_graph = []
 
         for edge in db_dir_graph.edges:
@@ -441,7 +374,6 @@ class QueryGenerator:
                 req_graph.append(edge)
 
         req_graph = self.graph_sort(req_graph)
-        print("required graph: ", req_graph)
 
         self.req_schema = self.remove_duplicate_keys(req_graph)
 
@@ -452,7 +384,6 @@ class QueryGenerator:
             for i, edge in enumerate(req_graph):
                 table1 = edge[0]
                 table2 = edge[1]
-                # print(edge)
                 fk_col = self.db_schema[table1]['fk'][table2] # foreign key corresponding to 2nd table  primary key
                 pk_col = self.db_schema[table2]['pk'][0] # primary key of 2nd table
                 clause += f"JOIN {table2} ON {table1}.{fk_col}={table2}.{pk_col} \n"
@@ -462,7 +393,6 @@ class QueryGenerator:
             clause += f"{req_graph[0][0]}\n"
             self.query_template['FROM'] = clause
 
-            
         return clause
 
     def aggregate_parser(self, tokens):
@@ -474,12 +404,9 @@ class QueryGenerator:
         while i< len(tokens):
             if tokens[i].upper() in list(self.constants['aggregate_functions'].keys()):
                 for table in self.db_schema.keys():
-                    print(table)
-                    cols = list(self.db_schema[table].keys()) # too check with missing cols from prev functions
-                    print(cols)
+                    cols = list(self.db_schema[table].keys()) # to check with missing cols from prev functions
                     for col in cols:
                         if col not in ["pk", "fk"]:
-                            print("col_check", col)
                             similarity = fuzz.ratio(tokens[i+1], col)
                             if similarity > thresh:
                                 thresh = similarity
@@ -488,13 +415,9 @@ class QueryGenerator:
                 if pot_col:
                     res.append(f"{tokens[i].upper()}({pot_col})")
                     i += 2
-                    # i+=1
             else:
                 res.append(tokens[i])
                 i+=1
-            # i+=1
-            
-        print("agg_parser",res)
 
         return res
 
@@ -513,19 +436,15 @@ class QueryGenerator:
         """
 
         tokens_copy = tokens.copy()
-        print(tokens_copy)
         # Define regex patterns for comparison operators and aggregate functions
         comparison_pattern = r'(=|>|<|>=|<=|!=)'  # To locate comparison operators
-        # aggregate_functions = ["SUM", "AVG", "COUNT", "MAX", "MIN"]
 
         # Initialize results
         where_conditions = []
         having_conditions = []
 
         # Split input query into tokens for easier parsing
-        # tokens = input_query.split()
         input_query = (' ').join(tokens_copy)
-        print(input_query)
 
         # Detect keywords and their positions
         where_pos = input_query.lower().find("where")
@@ -539,13 +458,8 @@ class QueryGenerator:
             # Look before and after the operator for a column and a value
             if operator_index > 0:
                 potential_column = tokens_copy[operator_index - 1]
-                formatted_keys = [f'{column.lower()}' 
-                        for table, columns in req_schema.items() 
-                        for column in columns]
-                print(req_schema)
-                print("inside_col_cal_func", potential_column,formatted_keys)
+                formatted_keys = [f'{column.lower()}' for table, columns in req_schema.items() for column in columns]
                 match = get_close_matches(potential_column.lower(), formatted_keys)
-                print(match)
                 if match:
                     column = potential_column
 
@@ -554,7 +468,6 @@ class QueryGenerator:
                 # Check if it's a quoted value or a number
                 if re.match(r"^'[^']*'$|^\d+(\.\d+)?$|^(?:\d{2}[/-]\d{2}[/-]\d{4})$", potential_value):
                     value = potential_value.strip("'").strip('"')
-                # print("%%%%%",value)
 
             return column, value
 
@@ -570,7 +483,6 @@ class QueryGenerator:
         for i, token in enumerate(res):
             if re.match(comparison_pattern, token):  # If it's a comparison operator
                 column, value = find_column_and_value(res, i, self.req_schema)
-                print("col and val", column, value)
 
                 if column and value:
                     condition = {
@@ -578,9 +490,6 @@ class QueryGenerator:
                         "operator": token,
                         "value": value
                     }
-                    print("cond:", condition)
-                    print("where:", where_pos)
-                    print("having:", having_pos)
 
                     # Check if the condition belongs to WHERE or HAVING based on position
                     if where_pos != -1 and having_pos == -1: # iff "where" in tokens
@@ -600,22 +509,16 @@ class QueryGenerator:
     def indentify_order_by(self, tokens):
         result = []
         
-        # if "order by" appears in tokens
         i = 0
-        print("inside order", tokens)
         while i < len(tokens) - 1:
             if tokens[i].lower() == "order" and tokens[i+1].lower() == "by":
-                # print(f"{tokens[i]}_{tokens[i+1]}")
                 for table, columns in self.req_schema.items():
-                    # for columns in self.req_schema[table].values():
-                    # for column in columns.keys():
                     match = get_close_matches(tokens[i+2], columns)
                     if match:
                         if "max" in tokens:
                             self.query_template["ORDER BY"] = f"{table}.{match[0]} DESC"
                             result.append(f"{tokens[i]} {tokens[i+1]} {table}.{match[0]} DESC")    
                         elif "descending" in tokens:
-                            print(1, tokens)
                             self.query_template["ORDER BY"] = f"{table}.{match[0]} DESC"
                             result.append(f"{tokens[i]} {tokens[i+1]} {table}.{match[0]} DESC")    
                         else:
@@ -627,23 +530,6 @@ class QueryGenerator:
                 i += 1
         if i < len(tokens):  # Add any remaining token
             result.extend(tokens[i:])
-
-        print(self.req_schema)
-
-        # print(list(self.req_schema.values())[0])
-        
-        # if just "max" appears in tokens
-        # for token in result:
-        #     for table, cols in self.req_schema.items():
-        #         match = get_close_matches(token, cols)
-        #         if match:
-        #             print(match)
-        #             if "max" in result:
-        #                 self.query_template["ORDER BY"] = f"{table}.{match[0]} DESC"
-        #                 print(f"{match[0]} desc") 
-        #             else:
-        #                 self.query_template["ORDER BY"] = f"{table}.{match[0]}"
-        #                 print(f"{match[0]}")
 
         return list(dict.fromkeys(result)) # removing duplicates
     
@@ -659,8 +545,6 @@ class QueryGenerator:
                 else:
                     limit = 1
                     self.query_template["LIMIT"] = 1
-        
-        # self.query_template["LIMIT"] = -1
 
         return limit
 
@@ -680,14 +564,6 @@ class QueryGenerator:
             for agg in agg_funcs:
                 if agg in token:
                     select_cols.add(token)
-
-        print("aggregate cols", select_cols)
-
-        # for table, cols in self.req_schema.items():
-        #     for col in cols:
-        #         if f"{table}.{col}" not in select_cols:
-        #             print(f"{table}.{col}")
-        #             select_cols.add(f"{table}.{col}")
 
         for table, cols in self.req_schema.items():
             for col in cols:
@@ -711,7 +587,6 @@ class QueryGenerator:
 
         group_by_col = self.query_template['GROUP BY']
         if group_by_col:
-            print(group_by_col)
             for table, cols in self.req_schema.items():
                 if group_by_col in cols:
                     select_cols.add(f"{table}.{group_by_col}")
@@ -738,11 +613,6 @@ class QueryGenerator:
 
         return
 
-    # GRAPH GENERATOR - seperate function/class
-    # def graph_generator():
-    #     pass
-
-    # template generator - not required
     def query_template_generator(self, input, table) -> dict:
 
         # preprocess -> remove keywords -> group by -> columns & table identification 
@@ -751,37 +621,28 @@ class QueryGenerator:
         self.query_template = QUERY_TEMPLATE.copy()
 
         self.input = input
-        print("******input",self.input)
 
         self.tokens = self.preprocess_text(input)
-        print("******tokens",self.tokens)
+
         self.tokens_nk = self.remove_keywords(self.tokens)
-        print("******tokens_nk",self.tokens_nk)
 
         self.tokens_group = self.identify_group_by(self.tokens_nk)
-        print("******tokens_group",self.tokens_group)
+    
         self.req_schema = self.indentify_col_tables(self.tokens_group, table)
-        print("******req_schema",self.req_schema)
 
         if len(self.req_schema)>1:
             self.from_clause = self.join_clause()
-            print("******",self.from_clause)
+        
         else:
             for table in self.req_schema.keys():
                 self.query_template['FROM'] = table
 
         self.agg_tokens, self.conditions = self.extract_conditions(self.tokens)
-        print("******conditions",self.conditions)
-        print("******agg_tokens",self.agg_tokens)
-
 
         self.order_by = self.indentify_order_by(self.tokens)
-        print("******order_by",self.order_by)
-
+    
         self.limit = self.indentify_limit(self.tokens)
-        print("******limit",self.limit)
 
         self.select = self.select_validator(self.agg_tokens)
-
 
         return self.query_template

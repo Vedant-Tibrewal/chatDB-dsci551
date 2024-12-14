@@ -68,7 +68,6 @@ def show_tables_and_primary_keys(db_config):
         results = cursor.fetchall()
 
         pk = []
-        # Print the results
         print(f"Tables and Primary Keys in database '{db_config['database']}':")
         for table_name, primary_keys in results:
             pk.append((table_name, primary_keys))

@@ -70,7 +70,6 @@ def insert_csv_to_mysql(csv_file, db_config, table_name, db_schema):
         else:
             fk_definition = ""
 
-        print("schema check", db_schema)
         
         # Create table SQL
         create_table_sql = f""" 
@@ -112,8 +111,6 @@ def insert_json_to_mongodb(json_file, mongo_uri, db_name, collection_name, db_sc
     collection.insert_many(documents)
 
     db_schema[collection_name] = generate_dynamic_schema(documents)
-
-    print(db_schema)
 
     write_json(db_schema, "src/chatdb/constants/db_schema.json")
     

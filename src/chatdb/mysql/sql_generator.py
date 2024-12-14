@@ -17,12 +17,9 @@ class SQLGenerator(QueryGenerator):
                     query += f"{key.upper()} {values}\n"
                     query = re.sub(r'\n\n', r'\n', query)
                 elif key!="WHERE" and key != "HAVING":
-                    # print(key)
                     query += f"{key.upper()} {values}\n"
-                    # print(query)
                 else:
                     # specifc to Condition clause
-                    # print("cond")
                     for cond in query_template[key]:
                         condition = list(cond.values())
                         if condition[-1].isalpha():
@@ -36,6 +33,5 @@ class SQLGenerator(QueryGenerator):
 
         query = query.strip()
         query += ";"
-        # print(query)
 
         return query

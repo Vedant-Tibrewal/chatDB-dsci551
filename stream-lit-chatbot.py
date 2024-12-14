@@ -117,21 +117,20 @@ def sample_sql_queries(prompt):
     else:
         return prompt
     
+
 def execute_mongo_queries(query_strings, mongo_uri='mongodb://localhost:27017/', db_name='chatdb'):
     client = MongoClient(mongo_uri)
     db = client[db_name]
 
-        # Extract collection name and command
+    # Extract collection name and command
     match = re.search(r"db\.(\w+)\.(find|aggregate)\((.*)\)$", query_strings, re.DOTALL)
     if not match:
-        results.append("Invalid query format")
         return []
     
     collection_name, command_type, command_body = match.groups()
 
     collection = db[collection_name]
 
-    
     # Process find queries
     if command_type == 'find':
         filter_match = re.search(r"find\((.*?)\)(?:\.sort|\.|$)", query_strings, re.DOTALL)
@@ -144,16 +143,13 @@ def execute_mongo_queries(query_strings, mongo_uri='mongodb://localhost:27017/',
         
         # result = f"Find in {collection} with filter: {filter_str}"
         if sort_str and limit:
-
-            results = collection.find(eval(filter_str)).sort(sort_str).limit(limit)
+            results = collection.find(eval(filter_str)).sort(eval(sort_str)).limit(limit)
         elif limit:
             results = collection.find(eval(filter_str)).limit(limit)
         elif sort_str:
-            results = collection.find(eval(filter_str)).sort(sort_str)
+            results = collection.find(eval(filter_str)).sort(eval(sort_str))
         else:
             results = collection.find(eval(filter_str))
-
-
         
     # Process aggregate queries
     elif command_type == 'aggregate':
@@ -162,16 +158,15 @@ def execute_mongo_queries(query_strings, mongo_uri='mongodb://localhost:27017/',
         results = collection.aggregate(eval(pipeline))
         # result = f"Aggregate in {collection} with pipeline: {pipeline}"
     
-
-    
     return results
+
 
 def sample_mongo_queries(prompt):
     if prompt.strip().upper().startswith('SAMPLE'):
         if "group" in prompt:
             query = random.choice(GROUP)
             if query:
-                st.write("Sample Queries based on group_by:")
+                st.write("Sample Queries based on group:")
                 # for sample in query:
                 st.code(query)
                 result = execute_mongo_queries(query)
@@ -179,7 +174,7 @@ def sample_mongo_queries(prompt):
         elif "sort" in prompt:
             query = random.choice(SORT)
             if query:
-                st.write("Sample Queries based on order_by:")
+                st.write("Sample Queries based on sort:")
                 # for sample in query:
                 st.code(query)
                 result = execute_mongo_queries(query)
@@ -202,6 +197,7 @@ def sample_mongo_queries(prompt):
             return result
     else:
         return prompt
+
 
 def execute_sql_query(dbconfig, query):
     try:
@@ -251,15 +247,6 @@ def execute_sql_query(dbconfig, query):
             cursor.close()
             connection.close()
 
-# def execute_sql(mysql_configs, query):
-#     connection = mysql.connector.connect(
-#             **mysql_configs
-#         )
-#     cursor = connection.cursor()
-#     cursor.execute(query)
-#     res = cursor.fetchall()
-#     print(pd.DataFrame(res))
-
 def create_chatbot(sql_config, mongo_uri, db_schema):
     st.set_page_config(page_title="Database Explorer", page_icon="🔍", layout="wide")
 
@@ -267,7 +254,6 @@ def create_chatbot(sql_config, mongo_uri, db_schema):
     st.title("ChatDB")
     
     # Create tabs for different interfaces
-    # tab1, tab2, tab3, tab4 = st.tabs(["SQL", "MongoDB", "Insert data into MySQL", "Insert Data into MongoDB"])
     tab1, tab2 = st.tabs(["SQL", "MongoDB"])
     
     with tab1:
@@ -346,19 +332,14 @@ def create_chatbot(sql_config, mongo_uri, db_schema):
                         # Execute the query
                         result = execute_sql_query(sql_config, query)
                     
-                        # Display the result
-                        # st.dataframe(result[0])
-                        
                         # Generate a response message
-                        response = f"Query executed successfully. Here are the results:"
+                        response = "Query executed successfully. Here are the results:"
                         st.markdown(response)
                         st.session_state.messages.append({"role": "assistant", "content": response})
                     except Exception as e:
                         error_message = f"Error executing query: {str(e)}"
                         st.error(error_message)
                         st.session_state.messages.append({"role": "assistant", "content": error_message})
-
-
     
     with tab2:
         col1, col2 = st.columns([1,3])
@@ -480,16 +461,5 @@ if __name__ == "__main__":
     db_name = "chatdb"
     coll_name = "patients"
     mysql_configs = read_json("src/chatdb/constants/config.json")
-
-    # print(mysql_configs)
     db_schema = read_json("src/chatdb/constants/db_schema.json")
     create_chatbot(sql_config=mysql_configs, mongo_uri=conn_string, db_schema=db_schema)
-    # test = NoSQLGenerator(db_schema, conn_string, db_name)
-    # test = SQLGenerator(db_schema)
-    # query = test.sql_parser("Find the total billingcost for admissions where carelevel is 'Emergency'")
-    # print(query)
-    # print(execute_sql(mysql_configs, query))
-
-    
-
-    # print(test.mongod_parser("How many patients")) strea
